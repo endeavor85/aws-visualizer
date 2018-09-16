@@ -1,0 +1,7 @@
+.AclEntryDeny {
+    background-color: #ffbbbb;
+}
+
+.AclEntryAllow {
+    background-color: #bbffbb;
+}

@@ -1,0 +1,11 @@
+.Vpc > :global(.panel) {
+    background-color: #eeeeff;
+    border-color: #aaaaff;
+    border-width: 4px;
+}
+
+.Vpc > :global(.panel) > :global(.panel-heading) {
+    background-color: #ccccff;
+    border-color: #aaaaff;
+    border-width: 4px;
+}

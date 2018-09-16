@@ -1,0 +1,10 @@
+.Subnet > :global(.panel) {
+    border-color: #aaffaa;
+    border-width: 2px;
+}
+
+.Subnet > :global(.panel) > :global(.panel-heading) {
+    background-color: #ccffcc;
+    border-color: #aaffaa;
+    border-width: 2px;
+}

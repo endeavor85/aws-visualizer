@@ -1,0 +1,11 @@
+.AwsPanel {
+  border-color: #FFD7AA;
+  background-color: #FFF0C7;
+  border-width: 2px;
+}
+
+.AwsPanel > :global(.panel-heading) {
+  background-color: #FFF0C7;
+  border-color: #FFD7AA;
+  border-width: 2px;
+}
