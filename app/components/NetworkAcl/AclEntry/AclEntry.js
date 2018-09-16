@@ -4,31 +4,60 @@ import styles from './AclEntry.css';
 
 const protocols = window.require('protocol-numbers');
 
-class AclEntry extends Component {
-  render() {
+type Props = {
+  entry: {
+    Protocol: string,
+    PortRange: {
+      From: number,
+      To: number
+    } | void,
+    IcmpTypeCode: {
+      Code: number,
+      Type: number
+    } | void,
+    RuleAction: string,
+    RuleNumber: number,
+    CidrBlock: string
+  }
+};
 
-    const protocol = (this.props.entry.Protocol === "-1" ? "ALL" : protocols[this.props.entry.Protocol].name);
+class AclEntry extends Component<Props> {
+  props: Props;
+
+  render() {
+    const { entry } = this.props;
+
+    const protocol =
+      entry.Protocol === '-1' ? 'ALL' : protocols[entry.Protocol].name;
 
     // ports
-    let ports = "";
-    
+    let ports = '';
+
     // if port range is defined
-    if(this.props.entry.PortRange) {
-      ports = this.props.entry.PortRange.From + "-" + this.props.entry.PortRange.To;
+    if (entry.PortRange) {
+      ports = `${entry.PortRange.From}-${entry.PortRange.To}`;
     }
     // if protocol is ICMP
-    else if (this.props.entry.Protocol === "1"){
+    else if (entry.Protocol === '1') {
       // https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
-      ports =
-        (this.props.entry.IcmpTypeCode.Code < 0 ? "ALL CODES" : this.props.entry.IcmpTypeCode.Code) + ", " +
-        (this.props.entry.IcmpTypeCode.Type < 0 ? "ALL TYPES" : this.props.entry.IcmpTypeCode.Type);
+      ports = `${
+        entry.IcmpTypeCode.Code < 0 ? 'ALL CODES' : entry.IcmpTypeCode.Code
+      }, ${
+        entry.IcmpTypeCode.Type < 0 ? 'ALL TYPES' : entry.IcmpTypeCode.Type
+      }`;
     }
 
     return (
-      <tr className={this.props.entry.RuleAction === 'deny' ? styles.AclEntryDeny : styles.AclEntryAllow}>
-        <td>{this.props.entry.RuleNumber}</td>
-        <td>{this.props.entry.RuleAction.toUpperCase()}</td>
-        <td>{this.props.entry.CidrBlock}</td>
+      <tr
+        className={
+          entry.RuleAction === 'deny'
+            ? styles.AclEntryDeny
+            : styles.AclEntryAllow
+        }
+      >
+        <td>{entry.RuleNumber}</td>
+        <td>{entry.RuleAction.toUpperCase()}</td>
+        <td>{entry.CidrBlock}</td>
         <td>{protocol}</td>
         <td>{ports}</td>
       </tr>

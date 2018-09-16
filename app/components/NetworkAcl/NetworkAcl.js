@@ -5,46 +5,65 @@ import AclEntry from './AclEntry/AclEntry';
 
 import styles from './NetworkAcl.css';
 
-class NetworkAcl extends Component {
+type Props = {
+  acl: {
+    NetworkAclId: string,
+    Tags: {
+      Key: string,
+      Value: string
+    }[],
+    Entries: {
+      RuleNumber: number,
+      Egress: boolean
+    }[]
+  }
+};
+
+class NetworkAcl extends Component<Props> {
+  props: Props;
 
   constructor(props) {
     super(props);
     this.state = {
-        name: props.acl.Tags.find(tag => tag.Key === 'Name').Value
+      name: props.acl.Tags.find(tag => tag.Key === 'Name').Value,
+      ingressEntries: props.acl.Entries.filter(entry => entry.Egress === false),
+      egressEntries: props.acl.Entries.filter(entry => entry.Egress === true)
     };
   }
 
-  getIngressEntries = () => {
-    return this.props.acl.Entries.filter((entry) => entry.Egress === false);
-  }
-
-  getEgressEntries = () => {
-    return this.props.acl.Entries.filter((entry) => entry.Egress === true);
-  }
-
   render() {
+    const { acl } = this.props;
+
+    const { name, ingressEntries, egressEntries } = this.state;
+
     return (
       <div className={styles.NetworkAcl}>
-        <Panel header={`${this.state.name} : ${this.props.acl.NetworkAclId}`}>
-            <Table bordered condensed>
-                <thead>
-                    <tr><th>#</th><th>Action</th><th>CIDR</th><th>Protocol</th><th>Port(s)</th></tr>
-                </thead>
-                <tbody>
-                    <tr><th colSpan="5">Ingress</th></tr>
-                    {
-                        this.getIngressEntries().map(function(entry, i){
-                            return <AclEntry key={i} entry={entry} />
-                        })
-                    }
-                    <tr><th colSpan="5">Egress</th></tr>
-                    {
-                        this.getEgressEntries().map(function(entry, i){
-                            return <AclEntry key={i} entry={entry} />
-                        })
-                    }
-                </tbody>
-            </Table>
+        <Panel header={`${name} : ${acl.NetworkAclId}`}>
+          <Table bordered condensed>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Action</th>
+                <th>CIDR</th>
+                <th>Protocol</th>
+                <th>Port(s)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th colSpan="5">Ingress</th>
+              </tr>
+              {ingressEntries.map(entry => (
+                <AclEntry key={entry.RuleNumber} entry={entry} />
+              ))}
+              <tr>
+                <th colSpan="5">Egress</th>
+              </tr>
+              {egressEntries.map(entry => (
+                <AclEntry key={entry.RuleNumber} entry={entry} />
+              ))}
+            </tbody>
+          </Table>
         </Panel>
       </div>
     );

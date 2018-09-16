@@ -1,72 +1,121 @@
 import React, { Component } from 'react';
 import { Panel } from 'react-bootstrap';
+import AWSVPCIcon from 'react-aws-icons/dist/aws/compute/VPC';
 
 import Subnet from '../Subnet/Subnet';
 import NetworkAcl from '../NetworkAcl/NetworkAcl';
 import RouteTable from '../RouteTable/RouteTable';
 import RDSInstance from '../RDSInstance/RDSInstance';
 import InternetGateway from '../InternetGateway/InternetGateway';
-import AwsIcon from '../AwsIcon/AwsIcon';
 
 import styles from './Vpc.css';
 
-class Vpc extends Component {
-  getSubnetEc2Instances = (subnet) => {
-    return this.props.ec2Instances.filter((instance) => instance.SubnetId === subnet.SubnetId);
-  }
-  
-  getRouteTableVpcEndpoints = (routeTable) => {
-    return this.props.vpcEndpoints.filter((vpcEndpoint) => {
-      return (vpcEndpoint.RouteTableIds.filter((routeTableId) => routeTableId === routeTable.RouteTableId).length > 0)
-    });
-  }
+type Props = {
+  vpc: {
+    VpcId: string,
+    CidrBlock: string
+  },
+  subnets: {
+    SubnetId: string
+  }[],
+  acls: {
+    NetworkAclId: string
+  }[],
+  routeTables: {
+    RouteTableId: string
+  }[],
+  internetGateways: {
+    InternetGatewayId: string
+  }[],
+  rdsInstances: {
+    DbiResourceId: string
+  }[],
+  ec2Instances: {
+    SubnetId: string
+  }[],
+  vpcEndpoints: {
+    RouteTableIds: string[]
+  }[]
+};
+
+class Vpc extends Component<Props> {
+  props: Props;
+
+  getSubnetEc2Instances = (ec2Instances, subnet) =>
+    ec2Instances.filter(instance => instance.SubnetId === subnet.SubnetId);
+
+  getRouteTableVpcEndpoints = (vpcEndpoints, routeTable) =>
+    vpcEndpoints.filter(
+      vpcEndpoint =>
+        vpcEndpoint.RouteTableIds.filter(
+          routeTableId => routeTableId === routeTable.RouteTableId
+        ).length > 0
+    );
 
   render() {
-    const name = this.props.vpc.Tags.find(tag => tag.Key === 'Name').Value;
+    const {
+      vpc,
+      subnets,
+      acls,
+      routeTables,
+      internetGateways,
+      rdsInstances,
+      ec2Instances,
+      vpcEndpoints
+    } = this.props;
+
+    const name = vpc.Tags.find(tag => tag.Key === 'Name').Value;
 
     return (
       <div className={styles.Vpc}>
-        <Panel header={`VPC ${name} : ${this.props.vpc.VpcId}`}>
-          <AwsIcon src='General/General_virtualprivatecloud' />
-          <span className={styles.VpcCidr}>{this.props.vpc.CidrBlock}</span>
+        <Panel header={`VPC ${name} : ${vpc.VpcId}`}>
+          <AWSVPCIcon className="awsIcon" size={64} />
+          <span className={styles.VpcCidr}>{vpc.CidrBlock}</span>
           <h3>Subnets</h3>
-          {
-            this.props.subnets.map((subnet, i) => {
-              return <Subnet key={i} subnet={subnet} ec2Instances={this.getSubnetEc2Instances(subnet)} />
-            })
-          }
+          {subnets.map(subnet => (
+            <Subnet
+              key={subnet.SubnetId}
+              subnet={subnet}
+              ec2Instances={this.getSubnetEc2Instances(ec2Instances, subnet)}
+            />
+          ))}
           <h3>Network ACLs</h3>
-          {
-            this.props.acls.map((acl, i) => {
-              return <NetworkAcl key={i} acl={acl} />
-            })
-          }
+          {acls.map(acl => (
+            <NetworkAcl key={acl.NetworkAclId} acl={acl} />
+          ))}
           <h3>Route Tables</h3>
-          {
-            this.props.routeTables.map((routeTable, i) => {
-              return <RouteTable key={i} routeTable={routeTable} vpcEndpoints={this.getRouteTableVpcEndpoints(routeTable)} />
-            })
-          }
+          {routeTables.map(routeTable => (
+            <RouteTable
+              key={routeTable.RouteTableId}
+              routeTable={routeTable}
+              vpcEndpoints={this.getRouteTableVpcEndpoints(
+                vpcEndpoints,
+                routeTable
+              )}
+            />
+          ))}
           <h3>Internet Gateways</h3>
-          {
-            this.props.internetGateways.length > 0 ? (
-              this.props.internetGateways.map((igw, i) => {
-                return <InternetGateway key={i} internetGateway={igw} />
-              })
-            ) : (
-              <span>None.</span>
-            )
-          }
+          {internetGateways.length > 0 ? (
+            internetGateways.map(igw => (
+              <InternetGateway
+                key={igw.InternetGatewayId}
+                internetGateway={igw}
+              />
+            ))
+          ) : (
+            <span>None.</span>
+          )}
           <h3>RDS Instances</h3>
-          {
-            this.props.rdsInstances.length > 0 ? (
-              this.props.rdsInstances.map((rdsInstance, i) => {
-                return <RDSInstance key={i} rdsInstance={rdsInstance} />
-              })
-            ) : (
-              <span>None.</span>
-            )
-          }
+          {rdsInstances.length > 0 ? (
+            rdsInstances.map(rdsInstance => (
+              <RDSInstance
+                key={rdsInstance.DbiResourceId}
+                rdsInstance={rdsInstance}
+              />
+            ))
+          ) : (
+            <span>None.</span>
+          )}
         </Panel>
       </div>
     );

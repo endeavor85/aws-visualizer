@@ -1,3 +1,27 @@
 .InternetGateway {
-    display: inline-block;
+  display: inline-block;
+  padding: 4px;
+  text-align: center;
+  margin-bottom: 20px;
+  line-height: 1.42857143;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  -webkit-transition: border 0.2s ease-in-out;
+  -o-transition: border 0.2s ease-in-out;
+  transition: border 0.2s ease-in-out;
+}
+
+.InternetGateway > .awsIcon {
+  margin-right: auto;
+  margin-left: auto;
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 0;
+}
+
+.InternetGateway .caption {
+  padding: 9px;
+  color: #333;
 }

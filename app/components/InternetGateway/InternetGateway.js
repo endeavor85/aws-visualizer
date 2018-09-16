@@ -1,18 +1,34 @@
 import React, { Component } from 'react';
-import { Thumbnail } from 'react-bootstrap';
+
+import AWSInternetGatewayIcon from 'react-aws-icons/dist/aws/compute/InternetGateway';
 
 import styles from './InternetGateway.css';
 
-class InternetGateway extends Component {
+type Props = {
+  internetGateway: {
+    InternetGatewayId: string,
+    Tags: {
+      Key: string,
+      Value: string
+    }[]
+  }
+};
+
+class InternetGateway extends Component<Props> {
+  props: Props;
+
   render() {
-    const name = this.props.internetGateway.Tags.find(tag => tag.Key === 'Name').Value;
+    const { internetGateway } = this.props;
+
+    const name = internetGateway.Tags.find(tag => tag.Key === 'Name').Value;
 
     return (
       <div className={styles.InternetGateway}>
-        <Thumbnail src="./assets/AWS_Simple_Icons/18.02.22/Networking & Content Delivery/NetworkingContentDelivery_AmazonVPC_internetgateway.png" alt="Internet Gateway">
+        <AWSInternetGatewayIcon className="awsIcon" size={64} />
+        <div className="caption">
           <h4>{name}</h4>
-          <p>{this.props.internetGateway.InternetGatewayId}</p>
-        </Thumbnail>
+          <p>{internetGateway.InternetGatewayId}</p>
+        </div>
       </div>
     );
   }
