@@ -1,11 +1,11 @@
-.AwsPanel {
-  border-color: #FFD7AA;
-  background-color: #FFF0C7;
+.AwsVisualizer {
+  border-color: #ffd7aa;
+  background-color: #fff0c7;
   border-width: 2px;
 }
 
-.AwsPanel > :global(.panel-heading) {
-  background-color: #FFF0C7;
-  border-color: #FFD7AA;
+.AwsVisualizer > :global(.panel-heading) {
+  background-color: #fff0c7;
+  border-color: #ffd7aa;
   border-width: 2px;
 }

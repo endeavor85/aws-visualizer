@@ -1,4 +1,4 @@
-const fs = require('fs');
+// const fs = require('fs');
 const AWS = require('aws-sdk');
 // const jsonfile = require('jsonfile');
 
@@ -46,6 +46,8 @@ module.exports = class AwsService {
         return Promise.all([
             this.s3.listBuckets({}).promise(), // S3 Buckets
             this.rds.describeDBInstances({}).promise(), // RDS Instances
+            this.rds.describeDBClusters({}).promise(), // RDS Aurora Clusters
+            this.rds.describeDBSubnetGroups({}).promise(), // RDS Subnet Groups
             this.iam.listRoles({}).promise(), // IAM Roles
             this.ec2.describeVpcs({}).promise(), // VPCs
             this.ec2.describeSubnets({}).promise(), // Subnets
@@ -76,12 +78,16 @@ module.exports = class AwsService {
         });
     };
 
-    getNameTag(tags) {
+    static getNameTag(tags) {
         return tags.find(tag => tag.Key === "Name").Value;
     };
 
-    printAwsData(awsData) {
-        console.log("Reading cache file: " + config.cacheFile);
+    static getACLEntryString(aclEntry) {
+        return `${aclEntry.RuleNumber} ${aclEntry.RuleAction} ${aclEntry.Protocol} ${(aclEntry.PortRange ? (`${aclEntry.PortRange.From}-${aclEntry.PortRange.To}`) : "-")} ${aclEntry.CidrBlock}`;
+    };
+
+    static printAwsData(awsData) {
+        // console.log("Reading cache file: " + config.cacheFile);
 
         try {
             // const awsData = jsonfile.readFileSync(config.cacheFile);
@@ -89,69 +95,104 @@ module.exports = class AwsService {
             // S3 Buckets
 
             console.log("=== S3 Buckets ===");
-            awsData.Buckets.forEach(function(bucket) {
-                console.log(" - " + bucket.Name);
+            awsData.Buckets.forEach((bucket) => {
+                console.log(` - ${bucket.Name}`);
             });
 
             // RDS Instances
 
             console.log("=== RDS Instances ===");
-            awsData.DBInstances.forEach(function(instance) {
-                console.log(" - " + instance.DBInstanceIdentifier);
+            awsData.DBInstances.forEach((instance) => {
+                console.log(` - ${instance.DBInstanceIdentifier}`);
                 
                 // VPC Security Groups
-                console.log("    - " + "VPC Security Groups:");
-                instance.VpcSecurityGroups.forEach(function(vpcSecurityGroup) {
-                    console.log("      - " + vpcSecurityGroup.VpcSecurityGroupId);
+                console.log("    - VPC Security Groups:");
+                instance.VpcSecurityGroups.forEach((vpcSecurityGroup) => {
+                    console.log(`      - ${vpcSecurityGroup.VpcSecurityGroupId}`);
                 });
                 
                 // DB Subnet Group
-                console.log("    - " + instance.DBSubnetGroup.DBSubnetGroupName);
+                console.log(`    - ${instance.DBSubnetGroup.DBSubnetGroupName}`);
                 
                 // DB Subnet Group Subnets
-                console.log("      - " + "Subnets:");
-                instance.DBSubnetGroup.Subnets.forEach(function(subnet) {
-                    console.log("        - " + subnet.SubnetIdentifier);
+                console.log("      - Subnets:");
+                instance.DBSubnetGroup.Subnets.forEach((subnet) => {
+                    console.log(`        - ${subnet.SubnetIdentifier}`);
+                });
+            });
+
+            // RDS Clusters
+
+            console.log("=== RDS Aurora Clusters ===");
+            awsData.DBClusters.forEach((cluster) => {
+                console.log(` - ${cluster.DBClusterIdentifier}`);
+                console.log(` - ${cluster.DatabaseName}`);
+                console.log(` - ${cluster.Engine}`);
+                console.log(` - ${cluster.Port}`);
+                
+                // VPC Security Groups
+                console.log("    - VPC Security Groups:");
+                cluster.VpcSecurityGroups.forEach((vpcSecurityGroup) => {
+                    console.log(`      - ${vpcSecurityGroup.VpcSecurityGroupId}`);
+                });
+                
+                // DB Subnet Group
+                console.log(`    - ${cluster.DBSubnetGroupName}`);
+            });
+
+            // DB Subnet Groups
+
+            console.log("=== DB Subnet Groups ===");
+            awsData.DBSubnetGroups.forEach((dbSubnetGroup) => {
+                console.log(` - ${dbSubnetGroup.DBSubnetGroupName}`);
+                console.log(` - ${dbSubnetGroup.DBSubnetGroupDescription}`);
+                console.log(` - ${dbSubnetGroup.VpcId}`);
+                console.log(` - ${dbSubnetGroup.Port}`);
+                
+                // DB Subnet Group Subnets
+                console.log("    - Subnets:");
+                dbSubnetGroup.Subnets.forEach((subnet) => {
+                    console.log(`      - ${subnet.SubnetIdentifier}(${subnet.SubnetAvailabilityZone.Name})`);
                 });
             });
 
             // IAM Roles
 
             console.log("=== IAM Roles ===");
-            awsData.Roles.forEach(function(role) {
-                console.log(" - " + role.RoleName);
+            awsData.Roles.forEach((role) => {
+                console.log(` - ${role.RoleName}`);
             });
 
             // VPCs
 
             console.log("=== VPCs ===");
-            awsData.Vpcs.forEach(function(vpc) {
-                console.log(" - " + getNameTag(vpc.Tags) + " (" + vpc.VpcId + ")");
-                console.log("   - " + vpc.CidrBlock);
+            awsData.Vpcs.forEach((vpc) => {
+                console.log(` - ${AwsService.getNameTag(vpc.Tags)} (${vpc.VpcId})`);
+                console.log(`   - ${vpc.CidrBlock}`);
             });
 
             // Subnets
 
             console.log("=== Subnets ===");
-            awsData.Subnets.forEach(function(subnet) {
-                console.log(" - " + getNameTag(subnet.Tags) + " (" + subnet.SubnetId + "): " + subnet.CidrBlock);
+            awsData.Subnets.forEach((subnet) => {
+                console.log(` - ${AwsService.getNameTag(subnet.Tags)} (${subnet.SubnetId}): ${subnet.CidrBlock}`);
             });
 
             // Elastic IPs
 
             console.log("=== Elastic IPs ===");
-            awsData.Addresses.forEach(function(address) {
-                console.log(" - " + address.PublicIp + " => " + (address.PrivateIpAddress ? address.PrivateIpAddress : "unassigned"));
+            awsData.Addresses.forEach((address) => {
+                console.log(` - ${address.PublicIp} => ${(address.PrivateIpAddress ? address.PrivateIpAddress : "unassigned")}`);
             });
 
             // EC2 Instances
 
             console.log("=== EC2 Instances ===");
-            awsData.Reservations.forEach(function(reservation) {
-                reservation.Instances.forEach(function(instance) {
+            awsData.Reservations.forEach((reservation) => {
+                reservation.Instances.forEach((instance) => {
                     console.log(" - " + instance.InstanceId);
                     console.log("   - Security Groups:");
-                    instance.SecurityGroups.forEach(function(sg) {
+                    instance.SecurityGroups.forEach((sg) => {
                         console.log("      - " + sg.GroupName);
                     });
                     console.log("   - IAM Instance Profile: " + instance.IamInstanceProfile.Id);
@@ -167,41 +208,41 @@ module.exports = class AwsService {
             // security Groups
 
             console.log("=== Security Groups ===");
-            awsData.SecurityGroups.forEach(function(sg) {
+            awsData.SecurityGroups.forEach((sg) => {
                 console.log(" - " + sg.GroupName);
             });
 
             // Key Pairs
 
             console.log("=== Key Pairs ===");
-            awsData.KeyPairs.forEach(function(keyPair) {
+            awsData.KeyPairs.forEach((keyPair) => {
                 console.log(" - " + keyPair.KeyName);
             });
             
             // Internet Gateways
 
             console.log("=== Internet Gateways ===");
-            awsData.InternetGateways.forEach(function(internetGateway) {
-                console.log(" - " + getNameTag(internetGateway.Tags) + " (" + internetGateway.InternetGatewayId + ")");
+            awsData.InternetGateways.forEach((internetGateway) => {
+                console.log(" - " + AwsService.getNameTag(internetGateway.Tags) + " (" + internetGateway.InternetGatewayId + ")");
             });
             
             // VPC Endpoints
 
             console.log("=== VPC Endpoints ===");
-            awsData.VpcEndpoints.forEach(function(vpcEndpoint) {
+            awsData.VpcEndpoints.forEach((vpcEndpoint) => {
                 console.log(" - " + vpcEndpoint.VpcEndpointId + " (" + vpcEndpoint.ServiceName + ")");
             });
 
             // Route Tables
 
             console.log("=== Route Tables ===");
-            awsData.RouteTables.forEach(function(routeTable) {
-                console.log(" - " + getNameTag(routeTable.Tags));
+            awsData.RouteTables.forEach((routeTable) => {
+                console.log(" - " + AwsService.getNameTag(routeTable.Tags));
 
                 console.log("    - VPC: " + routeTable.VpcId);
 
                 console.log("    - Subnet Associations:");
-                routeTable.Associations.forEach(function(subnet){
+                routeTable.Associations.forEach((subnet) => {
                     if(subnet.Main) {
                         console.log("      - (implicit)");
                     }
@@ -211,25 +252,24 @@ module.exports = class AwsService {
                 });
 
                 console.log("    - Routes:");
-                routeTable.Routes.forEach(function(route){
+                routeTable.Routes.forEach((route) => {
                     console.log("      - " + route.DestinationCidrBlock  + " => " + route.GatewayId);
                 });
             });
 
             // Network ACLs
             console.log("=== Network ACLs ===");
-            awsData.NetworkAcls.forEach(function(acl) {
-                console.log(" - " + getNameTag(acl.Tags));
+            awsData.NetworkAcls.forEach((acl) => {
+                console.log(" - " + AwsService.getNameTag(acl.Tags));
 
                 // Ingress Rules
-                const ingressRules = acl.Entries;
                 console.log("    - Ingress Rules:")
-                acl.Entries.filter(entry => !entry.Egress).forEach(function(entry) {
-                    console.log("      - " + getACLEntryString(entry));
+                acl.Entries.filter(entry => !entry.Egress).forEach((entry) => {
+                    console.log("      - " + AwsService.getACLEntryString(entry));
                 });
                 console.log("    - Egress Rules:")
-                acl.Entries.filter(entry => !entry.Egress).forEach(function(entry) {
-                    console.log("      - " + getACLEntryString(entry));
+                acl.Entries.filter(entry => !entry.Egress).forEach((entry) => {
+                    console.log("      - " + AwsService.getACLEntryString(entry));
                 });
             });
 
@@ -237,9 +277,5 @@ module.exports = class AwsService {
             console.error(err);
             throw err;
         }
-    };
-
-    getACLEntryString(aclEntry) {
-        return aclEntry.RuleNumber + " " + aclEntry.RuleAction + " " + aclEntry.Protocol + " " + (aclEntry.PortRange ? (aclEntry.PortRange.From + "-" + aclEntry.PortRange.To) : "-") + " " + aclEntry.CidrBlock;
     };
 };

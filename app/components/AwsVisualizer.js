@@ -2,7 +2,7 @@
 import React, { Component } from 'react';
 
 import { Panel } from 'react-bootstrap';
-import AWSLogo from 'react-aws-icons/dist/aws/logo/AWS';
+import AWSCloudLogo from 'react-aws-icons/dist/aws/compute/AWSCloud';
 
 import Vpc from './Vpc/Vpc';
 
@@ -32,6 +32,14 @@ type Props = {
       DBSubnetGroup: {
         VpcId: string
       }
+    }[],
+    DBClusters: {
+      DBClusterIdentifier: string,
+      DBSubnetGroup: string
+    }[],
+    DBSubnetGroups: {
+      DBSubnetGroupName: string,
+      VpcId: string
     }[],
     InternetGateways: {
       Attachments: {
@@ -66,6 +74,24 @@ export default class AwsVisualizer extends Component<Props> {
       rdsInstance => rdsInstance.DBSubnetGroup.VpcId === vpc.VpcId
     );
 
+  getVpcDbSubnetGroups = (dbSubnetGroups, vpc) =>
+    dbSubnetGroups.filter(
+      dbSubnetGroup => dbSubnetGroup.VpcId === vpc.VpcId
+    );
+
+  getRDSClusterDBSubnetGroup = (dbCluster, dbSubnetGroups) => 
+    dbSubnetGroups.find(
+      dbSubnetGroup => dbCluster.DBSubnetGroup === dbSubnetGroup.DBSubnetGroupName
+    );
+
+  getVpcRDSClusters = (dbClusters, dbSubnetGroups, vpc) => {
+    const vpcDbSubnetGroupNames = this.getVpcDbSubnetGroups(dbSubnetGroups, vpc).map(dbSubnetGroup => dbSubnetGroup.DBSubnetGroupName);
+
+    return dbClusters.filter(
+      dbCluster => vpcDbSubnetGroupNames.includes(dbCluster.DBSubnetGroup)
+    );
+  }
+
   getVpcInternetGateways = (igws, vpc) =>
     igws.filter(
       igw =>
@@ -78,29 +104,30 @@ export default class AwsVisualizer extends Component<Props> {
 
     return (
       <div className={styles.container} data-tid="container">
-        <h2>AWS Visualizer</h2>
-        <Panel
-          className={styles.AwsPanel}
-          header={`AWS (Region: ${awsRegion})`}
-        >
-          <AWSLogo className="awsIcon" size={64} />
-          <h2>VPCs</h2>
-          {awsData.Vpcs.map(vpc => (
-            <Vpc
-              key={vpc.VpcId}
-              vpc={vpc}
-              subnets={this.getVpcSubnets(awsData.Subnets, vpc)}
-              acls={this.getVpcNetworkAcls(awsData.NetworkAcls, vpc)}
-              routeTables={this.getVpcRouteTables(awsData.RouteTables, vpc)}
-              ec2Instances={this.getVpcEc2Instances(awsData.Reservations, vpc)}
-              rdsInstances={this.getVpcRDSInstances(awsData.DBInstances, vpc)}
-              internetGateways={this.getVpcInternetGateways(
-                awsData.InternetGateways,
-                vpc
-              )}
-              vpcEndpoints={this.getVpcVpcEndpoints(awsData.VpcEndpoints, vpc)}
-            />
-          ))}
+        <Panel className={styles.AwsVisualizer} defaultExpanded>
+          <Panel.Heading>
+            <Panel.Toggle><AWSCloudLogo className="awsIcon" /></Panel.Toggle>
+            AWS (Region: <span className="code">{awsRegion}</span>)
+          </Panel.Heading>
+          <Panel.Collapse>
+            <Panel.Body>
+              {awsData.Vpcs.map(vpc => (
+                <Vpc
+                  key={vpc.VpcId}
+                  vpc={vpc}
+                  subnets={this.getVpcSubnets(awsData.Subnets, vpc)}
+                  acls={this.getVpcNetworkAcls(awsData.NetworkAcls, vpc)}
+                  routeTables={this.getVpcRouteTables(awsData.RouteTables, vpc)}
+                  ec2Instances={this.getVpcEc2Instances(awsData.Reservations, vpc)}
+                  rdsInstances={this.getVpcRDSInstances(awsData.DBInstances, vpc)}
+                  rdsClusters={this.getVpcRDSClusters(awsData.DBClusters, awsData.DBSubnetGroups, vpc)}
+                  dbSubnetGroups={this.getVpcDbSubnetGroups(awsData.DBSubnetGroups, vpc)}
+                  internetGateways={this.getVpcInternetGateways(awsData.InternetGateways, vpc)}
+                  vpcEndpoints={this.getVpcVpcEndpoints(awsData.VpcEndpoints, vpc)}
+                />
+              ))}
+            </Panel.Body>
+          </Panel.Collapse>
         </Panel>
       </div>
     );

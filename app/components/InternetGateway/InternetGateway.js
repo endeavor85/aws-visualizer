@@ -26,6 +26,7 @@ class InternetGateway extends Component<Props> {
       <div className={styles.InternetGateway}>
         <AWSInternetGatewayIcon className="awsIcon" size={64} />
         <div className="caption">
+          <h4>Internet Gateway</h4>
           <h4>{name}</h4>
           <p>{internetGateway.InternetGatewayId}</p>
         </div>

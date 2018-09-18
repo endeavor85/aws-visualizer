@@ -29,9 +29,9 @@ class RouteTable extends Component<Props> {
   props: Props;
 
   getVpcEndpointGateway = (vpcEndpoints, gatewayId) =>
-    vpcEndpoints.filter(
+    vpcEndpoints ? vpcEndpoints.filter(
       vpcEndpoint => vpcEndpoint.VpcEndpointId === gatewayId
-    )[0];
+    )[0] : [];
 
   render() {
     const { vpcEndpoints, routeTable } = this.props;
@@ -40,40 +40,45 @@ class RouteTable extends Component<Props> {
 
     return (
       <div className={styles.RouteTable}>
-        <Panel header={`${name} : ${routeTable.RouteTableId}`}>
-          <AWSRouteTableIcon className="awsIcon" size={64} />
-          <Table bordered condensed>
-            <thead>
-              <tr>
-                <th>Destination</th>
-                <th>Gateway</th>
-              </tr>
-            </thead>
-            <tbody>
-              {routeTable.Routes.map(
-                route =>
-                  route.DestinationCidrBlock ? (
-                    <tr key={route.DestinationCidrBlock}>
-                      <td>{route.DestinationCidrBlock}</td>
-                      <td>{route.GatewayId}</td>
-                    </tr>
-                  ) : (
-                    <tr key={route.DestinationPrefixListId}>
-                      <td />
-                      <td>
-                        {
-                          this.getVpcEndpointGateway(
-                            vpcEndpoints,
-                            route.GatewayId
-                          ).ServiceName
-                        }
-                        <br />({route.GatewayId})
-                      </td>
-                    </tr>
-                  )
-              )}
-            </tbody>
-          </Table>
+        <Panel>
+          <Panel.Heading>
+            <Panel.Toggle><AWSRouteTableIcon className="awsIcon" /></Panel.Toggle>
+            Route Table {name} : <span className="code">{routeTable.RouteTableId}</span>
+          </Panel.Heading>
+          <Panel.Collapse>
+            <Table bordered condensed>
+              <thead>
+                <tr>
+                  <th>Destination</th>
+                  <th>Gateway</th>
+                </tr>
+              </thead>
+              <tbody>
+                {routeTable.Routes.map(
+                  route =>
+                    route.DestinationCidrBlock ? (
+                      <tr key={route.DestinationCidrBlock}>
+                        <td>{route.DestinationCidrBlock}</td>
+                        <td>{route.GatewayId}</td>
+                      </tr>
+                    ) : (
+                      <tr key={route.DestinationPrefixListId}>
+                        <td />
+                        <td>
+                          {
+                            this.getVpcEndpointGateway(
+                              vpcEndpoints,
+                              route.GatewayId
+                            ).ServiceName
+                          }
+                          <br />({route.GatewayId})
+                        </td>
+                      </tr>
+                    )
+                )}
+              </tbody>
+            </Table>
+          </Panel.Collapse>
         </Panel>
       </div>
     );

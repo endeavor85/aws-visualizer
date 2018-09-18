@@ -1,9 +1,11 @@
 // @flow
 import React, { Component } from 'react';
+import { Form, FormGroup, FormControl, ControlLabel, HelpBlock, Button, Panel, Col } from 'react-bootstrap';
+
 import AwsVisualizer from '../components/AwsVisualizer';
 
 const electron = window.require('electron');
-const ipcRenderer  = electron.ipcRenderer;
+const { ipcRenderer } = electron;
 
 export default class Root extends Component {
   constructor(props) {
@@ -24,9 +26,8 @@ export default class Root extends Component {
   }
 
   handleInputChange = (event) => {
-    const target = event.target;
-    const value = target.value;
-    const name = target.name;
+    const { target } = event;
+    const { value, name } = target;
 
     this.setState({
       [name]: value
@@ -34,42 +35,93 @@ export default class Root extends Component {
   }
 
   loadAwsData = () => {
+    const {
+      awsRegion,
+      awsProfile
+    } = this.state;
+
     console.log("Loading AWS Data...");
 
     ipcRenderer.send('load-aws-data', {
-      awsRegion: this.state.awsRegion,
-      awsProfile: this.state.awsProfile
+      awsRegion,
+      awsProfile
     });
   }
   
   render() {
+    const {
+      awsData,
+      awsRegion,
+      awsProfile
+    } = this.state;
+
     return (
       <div>
+        <br/>
         {
-          !this.state.awsData &&
-          <div>
-            <p>
-              AWS data not loaded.
-            </p>
-            <input
-              name="awsRegion"
-              type="text"
-              placeholder="Region"
-              defaultValue={this.state.awsRegion}
-              onChange={this.handleInputChange} />
-            <input
-              type="text"
-              placeholder="Profile"
-              defaultValue={this.state.awsProfile}
-              onChange={this.handleInputChange} />
-            <button onClick={this.loadAwsData}>Load AWS Data</button>
+          !awsData &&
+          
+          <div className="container">
+            <Panel>
+              <Panel.Heading>
+                <Panel.Title>Load AWS Data</Panel.Title>
+              </Panel.Heading>
+              <Panel.Body>
+                AWS data not loaded.
+              </Panel.Body>
+              <Form horizontal>
+                <FormGroup>
+                  <Col componentClass={ControlLabel} sm={2}>
+                    AWS Region
+                  </Col>
+                  <Col sm={10}>
+                    <FormControl
+                      name="awsRegion"
+                      type="text"
+                      value={awsRegion}
+                      placeholder="Region"
+                      onChange={this.handleInputChange}
+                    />
+                    <HelpBlock>Validation is based on string length.</HelpBlock>
+                  </Col>
+                </FormGroup>
+
+                <FormGroup>
+                  <Col componentClass={ControlLabel} sm={2}>
+                    AWS Profile
+                  </Col>
+                  <Col sm={10}>
+                    <FormControl
+                      name="awsProfile"
+                      type="text"
+                      value={awsProfile}
+                      placeholder="Profile"
+                      onChange={this.handleInputChange}
+                    />
+                    <HelpBlock>Validation is based on string length.</HelpBlock>
+                  </Col>
+                </FormGroup>
+
+                <FormGroup>
+                  <Col smOffset={2} sm={10}>
+                    <Button
+                      bsStyle="primary"
+                      onClick={this.loadAwsData} >
+                      Load AWS Data
+                    </Button>
+                  </Col>
+                </FormGroup>
+              </Form>
+            </Panel>
           </div>
         }
         {
-          this.state.awsData &&
-          <AwsVisualizer
-            awsRegion={this.state.awsRegion}
-            awsData={this.state.awsData} />
+          awsData &&
+          <div className="container-fluid">
+            <AwsVisualizer
+              awsRegion={awsRegion}
+              awsData={awsData} />
+          </div>
         }
       </div>
     );

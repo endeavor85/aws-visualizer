@@ -18,12 +18,12 @@ type Props = {
       Name: string
     },
     LaunchTime: string,
-    PublicIpAddress: string,
+    PublicIpAddress: string | void,
     PublicDnsName: string,
     PrivateIpAddress: string,
     PrivateDnsName: string,
-    KeyName: string,
-    IamInstanceProfile: {
+    KeyName: string | void,
+    IamInstanceProfile?: {
       Arn: string
     },
     ImageId: string,
@@ -44,68 +44,81 @@ class Ec2Instance extends Component<Props> {
 
     return (
       <div className={styles.Ec2Instance}>
-        <Panel header={`Ec2Instance ${name} : ${ec2Instance.InstanceId}`}>
-          <AWSInstanceIcon className="awsIcon" size={64} />
-          <Table bordered condensed>
-            <tbody>
-              <tr>
-                <th>AZ</th>
-                <td>{ec2Instance.Placement.AvailabilityZone}</td>
-              </tr>
-              <tr>
-                <th>Instance Type</th>
-                <td>{ec2Instance.InstanceType}</td>
-              </tr>
-              <tr>
-                <th>Architecture</th>
-                <td>{ec2Instance.Architecture}</td>
-              </tr>
-              <tr>
-                <th>State</th>
-                <td>{ec2Instance.State.Name}</td>
-              </tr>
-              <tr>
-                <th>Launch Time</th>
-                <td>{ec2Instance.LaunchTime}</td>
-              </tr>
-              <tr>
-                <th>Public IP</th>
-                {ec2Instance.PublicIpAddress ? (
-                  <td>
-                    <AWSElasticIPAddressIcon className="awsIcon" size={64} />
-                    &nbsp;&nbsp;
-                    {ec2Instance.PublicIpAddress}
-                  </td>
-                ) : (
-                  <td />
-                )}
-              </tr>
-              <tr>
-                <th>Public DNS Name</th>
-                <td>{ec2Instance.PublicDnsName}</td>
-              </tr>
-              <tr>
-                <th>Private IP</th>
-                <td>{ec2Instance.PrivateIpAddress}</td>
-              </tr>
-              <tr>
-                <th>Private DNS Name</th>
-                <td>{ec2Instance.PrivateDnsName}</td>
-              </tr>
-              <tr>
-                <th>Key Name</th>
-                <td>{ec2Instance.KeyName}</td>
-              </tr>
-              <tr>
-                <th>IAM Instance Profile</th>
-                <td>{ec2Instance.IamInstanceProfile.Arn}</td>
-              </tr>
-              <tr>
-                <th>Image Id</th>
-                <td>{ec2Instance.ImageId}</td>
-              </tr>
-            </tbody>
-          </Table>
+        <Panel>
+          <Panel.Heading>
+            <Panel.Toggle>
+              <AWSInstanceIcon className="awsIcon" />
+            </Panel.Toggle>
+            Ec2 Instance {name} : <span className="code">{ec2Instance.InstanceId}</span>
+          </Panel.Heading>
+          <Panel.Collapse>
+            <Table bordered condensed>
+              <tbody>
+                <tr>
+                  <th>AZ</th>
+                  <td>{ec2Instance.Placement.AvailabilityZone}</td>
+                </tr>
+                <tr>
+                  <th>Instance Type</th>
+                  <td>{ec2Instance.InstanceType}</td>
+                </tr>
+                <tr>
+                  <th>Architecture</th>
+                  <td>{ec2Instance.Architecture}</td>
+                </tr>
+                <tr>
+                  <th>State</th>
+                  <td>{ec2Instance.State.Name}</td>
+                </tr>
+                <tr>
+                  <th>Launch Time</th>
+                  <td>{ec2Instance.LaunchTime}</td>
+                </tr>
+                <tr>
+                  <th>Public IP</th>
+                  {ec2Instance.PublicIpAddress ? (
+                    <td>
+                      <AWSElasticIPAddressIcon className={`awsIcon ${styles.elasticIpIcon}`} />
+                      &nbsp;&nbsp;
+                      {ec2Instance.PublicIpAddress}
+                    </td>
+                  ) : (
+                    <td />
+                  )}
+                </tr>
+                <tr>
+                  <th>Public DNS Name</th>
+                  <td>{ec2Instance.PublicDnsName}</td>
+                </tr>
+                <tr>
+                  <th>Private IP</th>
+                  <td>{ec2Instance.PrivateIpAddress}</td>
+                </tr>
+                <tr>
+                  <th>Private DNS Name</th>
+                  <td>{ec2Instance.PrivateDnsName}</td>
+                </tr>
+                <tr>
+                  <th>Key Name</th>
+                  <td>{ec2Instance.KeyName}</td>
+                </tr>
+                <tr>
+                  <th>IAM Instance Profile</th>
+                  {
+                    ec2Instance.IamInstanceProfile ? (
+                      <td>{ec2Instance.IamInstanceProfile.Arn}</td>
+                    ) : (
+                      <td />
+                    )
+                  }
+                </tr>
+                <tr>
+                  <th>Image Id</th>
+                  <td>{ec2Instance.ImageId}</td>
+                </tr>
+              </tbody>
+            </Table>
+          </Panel.Collapse>
         </Panel>
       </div>
     );
